@@ -1,0 +1,90 @@
+; Author: Tanmay Patel
+; For: Home-made 6502 Computer Project - 8-sided Die Roller
+; Description: When the user presses the start button, the computer generates a random
+;	       number (from 0-255). It then converts this number such that it fall into
+;	       the range 1-8 and turns on the corresponding LED. Each of the LEDs indicates
+; 	     a particular roll. For instance, the 3rd LED turning on would indicate a roll
+;	       of 3. In this way, the program effectively rolls an octahedral die, displaying a 
+;	       random number between 1 and 8 each time.
+; Note: The start button is assumed to be connected to PB0 with an external pullup.
+
+; Set any "equates" locations (variable, data, registers)
+rand:		.SET $400	; Stores a random number between 0 and 255
+roll:		.SET $401	; Stores the "dice roll" (number between 1 and 8)
+PORTAVal:	.SET $402	; Stores the actual value to be outputted through PORTA
+loopCCounter	.SET $402	; Stores the counter for the outermost loop
+PORTB:		.SET $8000	; SFR - PORTB register (@$8000)
+PORTA: 		.SET $8001	; SFR - PORTA register (@$8001)
+TRISB:		.SET $8002	; SFR - PORTB data direction register (@$8002)
+TRISA: 		.SET $8003	; SFR - PORTA data direction register (@$8003)
+
+ .ORG $E000		; Begin writing the program at memory location $E000
+
+initialize:		; Initialize SFRs and variable locations
+  LDA #$FF		; Configure PORTA to output
+  STA TRISA
+  LDA #$00		; Configure PORTB to input
+  STA TRISB
+  STA rand		; Initialize the rand variable with a 0
+  STA roll		; Initialize the roll variable with a 0
+  LDA #$01		; Initialize the PORTAVal with a 1
+  STA PORTAVal
+  
+main:			; Main program loop
+  INC rand		; Continually increment rand until the button is pressed (this is the "random" number)
+  LDA #$01		; Test the PB0 bit (this is where the button is connected)
+  BIT PORTB
+  BEQ randToRoll	; If PB0 is clear (ie. the button has been pressed), branch to randToRoll
+  JMP main		; Loop back to the top of main
+  
+randToRoll:		; Convert the random number to a "dice roll" (number between 1 and 8)
+  LDA rand		; Load the random number into the accumulator
+  AND #$07		; AND the literal value #$07 with the accumulator (this essentially retains only the 3 least 
+  			; significant digits, hence converting the random number to 1 of 8 possibilities: 000 through 111) 
+  STA roll		; Transfer the new value to the roll variable
+  INC roll		; Increment roll so it contains a random value from 1-8 instead of 0-7
+
+rollToPortAVal:		; Convert the roll to an actual value that can be outputted through PORTA
+  DEC roll		; Decrement the roll variable
+  BNE double		; If the roll variable isn't zero, double the PORTA output value (by branching)
+  			; This repeated process essentially performs the operation: 2 ^ (roll - 1)
+  			; Eg. If the roll is a 5, the process generates a PORTAVal of 2^4 = 16 (this turns on the 5th LED)
+  
+display:		; Displays the PORTAVal and resets the status of SFRs/variables
+  LDA PORTAVal		; Load the new PORTAVal into the PORTA register
+  STA PORTA
+  JSR delay		; Create a time delay (by invoking the delay routine)
+  LDA #$00		; Clear PORTA (turn off all LEDs)
+  STA PORTA
+  LDA #$01		; Re-initialize the PORTAVal variable to 1
+  STA PORTAVal
+  JMP main		; Return to the top of the main loop
+  
+double:			; Double the current value of PORTAVal
+  CLD			; Clear the decimal mode flag (thus enabling binary addition)
+  CLC			; Clear the carry bit
+  LDA PORTAVal		; Load the current value of PORTAVal into the accumulator
+  ADC PORTAVal		; Add the value of the accumulator to the value of PORTAVal (thus doubling it)
+  STA PORTAVal		; Transfer the sum back into PORTAVal
+  JMP rollToPortAVal	; Jump back to the rollToPORTAVal label (ie. continue doubling PORTAVal as necessary)
+
+delay:			; Delay routine
+  LDA #$20		; Load the loopCCounter with hex 20
+  STA loopCCounter
+  
+loopC:			; Outside loop
+  LDX #$FF		; Load the X register with hex FF
+
+loopB:			; Middle loop
+  LDY #$FF		; Load the Y register with hex FF
+
+loopA:			; Inside loop
+  DEY			; Decrement the Y register
+  BNE loopA		; If decrementing Y does not equal 0, branch to the inside loop
+  DEX			; Decrement the X register
+  BNE loopB		; If decrementing X does not equal 0, branch to the middle loop
+  DEC loopCCounter	; Decrement the loopCCounter
+  BNE loopC		; If decrementing the counter does not equal 0, branch to the outside loop
+  RTS			; Return from the delay routine
+
+ .END			; Directive to end program
