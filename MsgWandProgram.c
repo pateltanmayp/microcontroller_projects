@@ -1,6 +1,4 @@
 /*
- * File: newmain.c
- * Author: Tanmay Patel
  * Project: Message Wand
  * Description: Displays a message when the wand is waved back and forth (using interrupts).
  */

@@ -1,6 +1,5 @@
 /*
- * Author: Tanmay Patel
- * Description: Reaction Tester Game!
+ * Description: Reaction Tester Whack-a-Mole Game!
  *		Press a start button to start the game. A sequence of LEDs will light up after 
  *		a random delay time. Press the stop button and observe the number of lit LEDs.
  *		The program caters itself to the user's reaction time, slowing down or speeding
