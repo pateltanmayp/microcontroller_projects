@@ -5,3 +5,9 @@ I built a 6502 computer from scratch and wrote a program for it. The program all
 
 ## Sequencer
 Produces a sequencer program that displays a dynamic LED pattern. Users can interact with and change the LED pattern through push buttons. All code is implemented in the [PIC Assembly lanuage](http://ww1.microchip.com/downloads/en/DeviceDoc/33014K.pdf).
+
+## Message Wand
+Uses C Interrupts to display a message of choice when the wand is waved back and forth. As the wand is waved in one direction, the array of LEDs rapidly changes its illumination pattern every frame to trick the brain into thinking it displayed a full 2-dimensional message (a word). An inertial sensor detects changes in direction and plays the frames in reverse order when the wand is waved backward. Therefore, when waved rapidly back and forth, the device will appear to be showing a customized message to the user.
+
+## Reaction Tester
+Allows users to test their reaction times in a physical setup. Conceptually, this game is similar to Whack-a-Mole, but with LEDs!
